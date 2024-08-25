@@ -2,6 +2,11 @@ let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 let cannonImage = new Image();
 
+fetch('./levelData.json')
+    .then(results => results.json())  // Add parentheses to call the .json() method
+    .then(data => console.log(data))  // Now 'data' will contain the parsed JSON object
+    .catch(error => console.error('Error:', error));
+
 let cannon = {  //cannon variables 
     x: undefined,
     y: undefined,   
