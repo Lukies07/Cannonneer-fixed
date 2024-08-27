@@ -18,25 +18,38 @@
         {
             "level_2": {
                 "platforms": [],
-                "evil_king": []
+                "evil_king": [],
+                "cannon": [
+                    { "x": 200, "y": 710}
+                ]            
             }
+            
         },
         {
             "level_3": {
                 "platforms": [],
-                "evil_king": []
+                "evil_king": [],
+                "cannon": [
+                    { "x": 400, "y": 710}
+                ]            
             }
         },
         {
             "level_4": {
                 "platforms": [],
-                "evil_king": []
+                "evil_king": [],
+                "cannon": [
+                    { "x": 5, "y": 300}
+                ]            
             }
         },
         {
             "level_5": {
                 "platforms": [],
-                "evil_king": []
+                "evil_king": [],
+                "cannon": [
+                    { "x": 50, "y": 250}
+                ]            
             }
         }
     ]

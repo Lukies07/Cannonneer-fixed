@@ -2,13 +2,13 @@ let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 let cannonImage = new Image();
 
-let cannon = {  //cannon variables 
+let cannon = {
     x: undefined,
     y: undefined,   
     width: 80,
     height: 240,
     angle: undefined,
-    pivotOffset: 0.166, // Pivot point offset from the bottom
+    pivotOffset: 0.166,
     pivotPoint: { x: undefined, y: undefined },
 };
 
@@ -16,25 +16,22 @@ let cannonBall = {
     x: undefined,
     y: undefined,
     radius: 16,
-    vx: 0, // velocity in x direction
-    vy: 0, // velocity in y direction
-    speed: 10, // speed of the cannonball
+    vx: 0,
+    vy: 0,
+    speed: 10,
     summoned: false,
     ammo: 1000
 };
 
 cannonImage.src = "images/cannon.png";
 window.addEventListener('resize', resizeCanvas);
-cannonImage.onload = () => {
-    resizeCanvas();
-};
+cannonImage.onload = resizeCanvas;
 
 resizeCanvas();
 
 canvas.addEventListener('mousemove', (event) => {
     let mouseX = event.clientX;
     let mouseY = event.clientY;
-    console.log('X: ', mouseX, 'Y: ', mouseY)
     let dx = mouseX - cannon.pivotPoint.x;
     let dy = mouseY - cannon.pivotPoint.y;
     cannon.angle = Math.atan2(dy, dx) + Math.PI / 2;
@@ -84,14 +81,12 @@ function shootCannonBall() {
     cannonBall.ammo--;
     cannonBall.summoned = true;
     
-    // Calculate the position at the tip of the cannon barrel
     let tipX = cannon.pivotPoint.x + ((cannon.height*0.8) * (1 - cannon.pivotOffset)) * Math.cos(cannon.angle - Math.PI / 2);
     let tipY = cannon.pivotPoint.y + ((cannon.height*0.8) * (1 - cannon.pivotOffset)) * Math.sin(cannon.angle - Math.PI / 2);
     
     cannonBall.x = tipX;
     cannonBall.y = tipY;
     
-    // Calculate the velocity based on the angle
     cannonBall.vx = cannonBall.speed * Math.cos(cannon.angle - Math.PI / 2);
     cannonBall.vy = cannonBall.speed * Math.sin(cannon.angle - Math.PI / 2);
 }
@@ -100,9 +95,8 @@ function updateCannonBallPosition() {
     if (cannonBall.summoned) {
         cannonBall.x += cannonBall.vx;
         cannonBall.y += cannonBall.vy;
-        // Check if the cannonball is off-screen
         if (cannonBall.x < 0 || cannonBall.x > canvas.width || cannonBall.y < 0 || cannonBall.y > canvas.height) {
-            cannonBall.summoned = false; // Reset the cannonball
+            cannonBall.summoned = false;
         }
     }
 }
@@ -143,9 +137,10 @@ function loop() {
         for (let level of levels) {
             if (isCollision(cannonBall, level)) {
                 console.log(`Cannonball hit ${level.id}`);
-                cannonBall.summoned = false; // Reset cannonball after collision
-                window.location.href = 'game.html'; // Redirect to game.html
-                break; // Stop checking after the first hit
+                const levelNumber = level.id.replace('level', '');
+                cannonBall.summoned = false;
+                window.location.href = `game.html?level=${levelNumber}`;
+                break;
             }
         }
     }

@@ -2,24 +2,16 @@ let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 let cannonImage = new Image();
 
-fetch('./levelData.json')
-    .then(results => results.json())  // Parse the JSON data
-    .then(levelData => {
-        // Access the cannon data from level_1
-        const cannonData = levelData.levels[0].level_1.cannon[0];
-        // Update the cannon position
-        updateCannonPosition(cannonData);
-    })
-    .catch(error => console.error('Error:', error)); //executes if there is an error
+let levelData;
+let currentLevel;
 
-
-let cannon = {  //cannon variables 
+let cannon = {
     x: undefined,
     y: undefined,   
     width: 80,
     height: 240,
     angle: undefined,
-    pivotOffset: 0.166, // Pivot point offset from the bottom
+    pivotOffset: 0.166,
     pivotPoint: { x: undefined, y: undefined },
 };
 
@@ -27,21 +19,29 @@ let cannonBall = {
     x: undefined,
     y: undefined,
     radius: 16,
-    vx: 0, // velocity in x direction
-    vy: 0, // velocity in y direction
-    speed: 15, // speed of the cannonball
+    vx: 0,
+    vy: 0,
+    speed: 10,
     summoned: false,
-    ammo: 10,
-    resistance: 1
+    ammo: 1000
 };
 
 cannonImage.src = "images/cannon.png";
-window.addEventListener('resize', resizeCanvas);
-cannonImage.onload = () => {
-    resizeCanvas();
-};
 
-resizeCanvas();
+// Fetch level data
+fetch('./levelData.json')
+    .then(response => response.json())
+    .then(data => {
+        levelData = data;
+        // Get the level from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        currentLevel = urlParams.get('level') || '1';
+        startLevel(currentLevel);
+    })
+    .catch(error => console.error('Error loading level data:', error));
+
+window.addEventListener('resize', resizeCanvas);
+cannonImage.onload = resizeCanvas;
 
 canvas.addEventListener('mousemove', (event) => {
     let mouseX = event.clientX;
@@ -58,6 +58,16 @@ canvas.addEventListener('click', function(event) {
     }
 });
 
+function startLevel(levelNumber) {
+    const levelKey = `level_${levelNumber}`;
+    const levelConfig = levelData.levels.find(level => level[levelKey])[levelKey];
+    
+    updateCannonPosition(levelConfig.cannon[0]);
+    // Here you would also set up platforms, evil king, etc.
+    
+    resizeCanvas();
+}
+
 function updateCannonPosition(cannonData) {
     cannon.x = cannonData.x;
     cannon.y = cannonData.y;
@@ -65,17 +75,10 @@ function updateCannonPosition(cannonData) {
     cannon.pivotPoint.y = cannon.y + cannon.height * (1 - cannon.pivotOffset);
 }
 
-
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    
-    // Pass the cannonData to updateCannonPosition
-    if (cannon.x !== undefined && cannon.y !== undefined) {
-        updateCannonPosition({ x: cannon.x, y: cannon.y });
-    }
-    
-    drawCannon(cannon.angle);
+    drawCannon();
 }
 
 function drawCannon(angle = 0) {
@@ -101,14 +104,12 @@ function shootCannonBall() {
     cannonBall.ammo--;
     cannonBall.summoned = true;
     
-    // Calculate the position at the tip of the cannon barrel
     let tipX = cannon.pivotPoint.x + ((cannon.height*0.8) * (1 - cannon.pivotOffset)) * Math.cos(cannon.angle - Math.PI / 2);
     let tipY = cannon.pivotPoint.y + ((cannon.height*0.8) * (1 - cannon.pivotOffset)) * Math.sin(cannon.angle - Math.PI / 2);
     
     cannonBall.x = tipX;
     cannonBall.y = tipY;
     
-    // Calculate the velocity based on the angle
     cannonBall.vx = cannonBall.speed * Math.cos(cannon.angle - Math.PI / 2);
     cannonBall.vy = cannonBall.speed * Math.sin(cannon.angle - Math.PI / 2);
 }
@@ -117,11 +118,18 @@ function updateCannonBallPosition() {
     if (cannonBall.summoned) {
         cannonBall.x += cannonBall.vx;
         cannonBall.y += cannonBall.vy;
-        // Check if the cannonball is off-screen
         if (cannonBall.x < 0 || cannonBall.x > canvas.width || cannonBall.y < 0 || cannonBall.y > canvas.height) {
-            cannonBall.summoned = false; // Reset the cannonball
+            cannonBall.summoned = false;
         }
     }
+}
+
+function drawPlatforms() {
+    // Implement platform drawing based on level data
+}
+
+function drawEvilKing() {
+    // Implement evil king drawing based on level data
 }
 
 function loop() {
@@ -129,6 +137,8 @@ function loop() {
     drawCannon(cannon.angle);
     updateCannonBallPosition();
     drawCannonBall();
+    drawPlatforms();
+    drawEvilKing();
     requestAnimationFrame(loop);
 }
 
