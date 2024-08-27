@@ -3,9 +3,15 @@ let ctx = canvas.getContext('2d');
 let cannonImage = new Image();
 
 fetch('./levelData.json')
-    .then(results => results.json())  // Add parentheses to call the .json() method
-    .then(data => console.log(data))  // Now 'data' will contain the parsed JSON object
-    .catch(error => console.error('Error:', error));
+    .then(results => results.json())  // Parse the JSON data
+    .then(levelData => {
+        // Access the cannon data from level_1
+        const cannonData = levelData.levels[0].level_1.cannon[0];
+        // Update the cannon position
+        updateCannonPosition(cannonData);
+    })
+    .catch(error => console.error('Error:', error)); //executes if there is an error
+
 
 let cannon = {  //cannon variables 
     x: undefined,
@@ -23,9 +29,10 @@ let cannonBall = {
     radius: 16,
     vx: 0, // velocity in x direction
     vy: 0, // velocity in y direction
-    speed: 10, // speed of the cannonball
+    speed: 15, // speed of the cannonball
     summoned: false,
-    ammo: 1000
+    ammo: 10,
+    resistance: 1
 };
 
 cannonImage.src = "images/cannon.png";
@@ -51,18 +58,24 @@ canvas.addEventListener('click', function(event) {
     }
 });
 
-function updateCannonPosition() {
-    cannon.x = (canvas.width - (cannon.width)) / 2;
-    cannon.y = canvas.height - cannon.height;
+function updateCannonPosition(cannonData) {
+    cannon.x = cannonData.x;
+    cannon.y = cannonData.y;
     cannon.pivotPoint.x = cannon.x + cannon.width / 2;
     cannon.pivotPoint.y = cannon.y + cannon.height * (1 - cannon.pivotOffset);
 }
 
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    updateCannonPosition();
-    drawCannon();
+    
+    // Pass the cannonData to updateCannonPosition
+    if (cannon.x !== undefined && cannon.y !== undefined) {
+        updateCannonPosition({ x: cannon.x, y: cannon.y });
+    }
+    
+    drawCannon(cannon.angle);
 }
 
 function drawCannon(angle = 0) {

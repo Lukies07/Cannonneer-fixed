@@ -9,55 +9,34 @@
                 ],
                 "evil_king": [
                     { "x": 1, "y": 1, "width": 1, "height": 1 }
+                ],
+                "cannon": [
+                    { "x": 5, "y": 710}
                 ]
             }
         },
         {
             "level_2": {
-                "platforms": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ],
-                "evil_king": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ]
+                "platforms": [],
+                "evil_king": []
             }
         },
         {
             "level_3": {
-                "platforms": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ],
-                "evil_king": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ]
+                "platforms": [],
+                "evil_king": []
             }
         },
         {
             "level_4": {
-                "platforms": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ],
-                "evil_king": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ]
+                "platforms": [],
+                "evil_king": []
             }
         },
         {
             "level_5": {
-                "platforms": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ],
-                "evil_king": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ]
+                "platforms": [],
+                "evil_king": []
             }
         }
     ]
