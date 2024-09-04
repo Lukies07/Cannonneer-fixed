@@ -1,56 +1,66 @@
 {
-    "levels": [
-        {
-            "level_1": {
-                "platforms": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 },
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ],
-                "evil_king": [
-                    { "x": 1, "y": 1, "width": 1, "height": 1 }
-                ],
-                "cannon": [
-                    { "x": 5, "y": 710}
-                ]
-            }
-        },
-        {
-            "level_2": {
-                "platforms": [],
-                "evil_king": [],
-                "cannon": [
-                    { "x": 200, "y": 710}
-                ]            
-            }
-            
-        },
-        {
-            "level_3": {
-                "platforms": [],
-                "evil_king": [],
-                "cannon": [
-                    { "x": 400, "y": 710}
-                ]            
-            }
-        },
-        {
-            "level_4": {
-                "platforms": [],
-                "evil_king": [],
-                "cannon": [
-                    { "x": 5, "y": 300}
-                ]            
-            }
-        },
-        {
-            "level_5": {
-                "platforms": [],
-                "evil_king": [],
-                "cannon": [
-                    { "x": 50, "y": 250}
-                ]            
-            }
-        }
+"level_1": {
+    "blocks": [
+        { "x": 1000, "y": 150, "width": 200, "height": 800 },
+        { "x": 500, "y": 0, "width": 100, "height": 600 }
+    ],
+    "evil_king": [
+        { "x": 1600, "y": 500, "width": 100, "height": 300}
+    ],
+    "cannon": [
+        { "x": 5, "y": 710}
+    ],
+    "ballType":[
+        "bouncyBall",
+        "gravityBall"
     ]
+},
+
+"level_2": {
+    "platforms": [],
+    "evil_king": [],
+    "cannon": [
+        { "x": 200, "y": 710}
+    ] ,
+    "ballType":[
+        "bouncyBall",
+        "gravityBall"
+    ]           
+},
+
+"level_3": {
+    "platforms": [],
+    "evil_king": [],
+    "cannon": [
+        { "x": 400, "y": 710}
+    ],
+    "ballType":[
+        "bouncyBall",
+        "gravityBall"
+    ]           
+},
+
+"level_4": {
+    "platforms": [],
+    "evil_king": [],
+    "cannon": [
+        { "x": 5, "y": 300}
+    ],
+    "ballType":[
+        "bouncyBall",
+        "gravityBall"
+    ]            
+},
+
+"level_5": {
+    "platforms": [],
+    "evil_king": [],
+    "cannon": [
+        { "x": 50, "y": 250}
+    ],
+    "ballType":[
+        "bouncyBall",
+        "gravityBall"
+    ]            
+}
 }

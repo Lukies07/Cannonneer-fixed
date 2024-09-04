@@ -23,22 +23,24 @@ let cannonBall = {
     vy: 0,
     speed: 10,
     summoned: false,
-    ammo: 1000
+    ammo: 10
 };
 
 cannonImage.src = "images/cannon.png";
 
+// Get the level number from the URL
+const urlParams = new URLSearchParams(window.location.search);
+const levelNumber = urlParams.get('level') || 1;
+
 // Fetch level data
 fetch('./levelData.json')
-    .then(response => response.json())
+    .then(results => results.json())
     .then(data => {
         levelData = data;
-        // Get the level from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        currentLevel = urlParams.get('level') || '1';
-        startLevel(currentLevel);
+        console.log('Loaded level data:', levelData);
+        startLevel(levelNumber);
     })
-    .catch(error => console.error('Error loading level data:', error));
+    .catch(error => console.error('Error:', error));
 
 window.addEventListener('resize', resizeCanvas);
 cannonImage.onload = resizeCanvas;
@@ -49,7 +51,6 @@ canvas.addEventListener('mousemove', (event) => {
     let dx = mouseX - cannon.pivotPoint.x;
     let dy = mouseY - cannon.pivotPoint.y;
     cannon.angle = Math.atan2(dy, dx) + Math.PI / 2;
-    drawCannon(cannon.angle);
 });
 
 canvas.addEventListener('click', function(event) {
@@ -60,10 +61,14 @@ canvas.addEventListener('click', function(event) {
 
 function startLevel(levelNumber) {
     const levelKey = `level_${levelNumber}`;
-    const levelConfig = levelData.levels.find(level => level[levelKey])[levelKey];
+    currentLevel = levelData[levelKey];
     
-    updateCannonPosition(levelConfig.cannon[0]);
-    // Here you would also set up platforms, evil king, etc.
+    if (currentLevel) {
+        console.log('Starting level:', levelKey, currentLevel);
+        updateCannonPosition(currentLevel.cannon[0]);
+    } else {
+        console.error(`Level ${levelNumber} not found in level data`);
+    }
     
     resizeCanvas();
 }
@@ -73,16 +78,16 @@ function updateCannonPosition(cannonData) {
     cannon.y = cannonData.y;
     cannon.pivotPoint.x = cannon.x + cannon.width / 2;
     cannon.pivotPoint.y = cannon.y + cannon.height * (1 - cannon.pivotOffset);
+    console.log('Updated cannon position:', cannon);
 }
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    drawCannon();
+    console.log('Canvas resized:', canvas.width, 'x', canvas.height);
 }
 
 function drawCannon(angle = 0) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
     ctx.translate(cannon.pivotPoint.x, cannon.pivotPoint.y);
     ctx.rotate(angle);
@@ -124,21 +129,58 @@ function updateCannonBallPosition() {
     }
 }
 
-function drawPlatforms() {
-    // Implement platform drawing based on level data
+function drawblocks() {
+    if (currentLevel && currentLevel.blocks) {
+        ctx.fillStyle = 'brown';
+        currentLevel.blocks.forEach((block, index) => {
+            ctx.fillRect(block.x, block.y, block.width, block.height);
+            console.log(`block ${index} drawn at:`, block.x, block.y, block.width, block.height);
+        });
+    }
 }
 
 function drawEvilKing() {
-    // Implement evil king drawing based on level data
+    if (currentLevel && currentLevel.evil_king && currentLevel.evil_king.length > 0) {
+        const king = currentLevel.evil_king[0];
+        ctx.fillStyle = 'red';
+        ctx.fillRect(king.x, king.y, king.width, king.height);
+        console.log('Evil king drawn at:', king.x, king.y, king.width, king.height);
+    }
+}
+//i had Ai temporarily implement this
+function drawDebugGrid() {
+    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+    ctx.lineWidth = 1;
+    
+    // Draw vertical lines
+    for (let x = 0; x <= canvas.width; x += 100) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+        ctx.fillText(x.toString(), x, 10);
+    }
+    
+    // Draw horizontal lines
+    for (let y = 0; y <= canvas.height; y += 100) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
+        ctx.fillText(y.toString(), 0, y);
+    }
 }
 
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawDebugGrid();
+    drawblocks();
+    drawEvilKing();
     drawCannon(cannon.angle);
     updateCannonBallPosition();
     drawCannonBall();
-    drawPlatforms();
-    drawEvilKing();
     requestAnimationFrame(loop);
 }
 
