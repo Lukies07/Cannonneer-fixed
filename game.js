@@ -21,16 +21,19 @@ let cannonBall = {
     radius: 16,
     vx: 0,
     vy: 0,
-    speed: 10,
+    speed: 20,
     summoned: false,
-    ammo: 10
+    ammo: 10,
+    gravity: 0.2, // Gravity acceleration
+    bounces: 0,   // Number of bounces for the bouncy ball
 };
 
+let cannonBallType = 'gravityBall'; // Default cannon ball mode
 cannonImage.src = "images/cannon.png";
 
 // Get the level number from the URL
 const urlParams = new URLSearchParams(window.location.search);
-const levelNumber = urlParams.get('level') || 1;
+const levelNumber = urlParams.get('level'); 
 
 // Fetch level data
 fetch('./levelData.json')
@@ -56,6 +59,17 @@ canvas.addEventListener('mousemove', (event) => {
 canvas.addEventListener('click', function(event) {
     if (cannonBall.ammo > 0 && !cannonBall.summoned) {
         shootCannonBall();
+    }
+});
+
+// Keypress event to switch between ball types
+window.addEventListener('keydown', function(event) {
+    if (event.key === '1') {
+        cannonBallType = 'gravityBall';
+        console.log('Selected: Gravity Ball');
+    } else if (event.key === '2') {
+        cannonBallType = 'bouncyBall';
+        console.log('Selected: Bouncy Ball');
     }
 });
 
@@ -108,9 +122,10 @@ function drawCannonBall() {
 function shootCannonBall() {
     cannonBall.ammo--;
     cannonBall.summoned = true;
+    cannonBall.bounces = 0; // Reset bounce count for bouncy ball
     
-    let tipX = cannon.pivotPoint.x + ((cannon.height*0.8) * (1 - cannon.pivotOffset)) * Math.cos(cannon.angle - Math.PI / 2);
-    let tipY = cannon.pivotPoint.y + ((cannon.height*0.8) * (1 - cannon.pivotOffset)) * Math.sin(cannon.angle - Math.PI / 2);
+    let tipX = cannon.pivotPoint.x + ((cannon.height * 0.8) * (1 - cannon.pivotOffset)) * Math.cos(cannon.angle - Math.PI / 2);
+    let tipY = cannon.pivotPoint.y + ((cannon.height * 0.8) * (1 - cannon.pivotOffset)) * Math.sin(cannon.angle - Math.PI / 2);
     
     cannonBall.x = tipX;
     cannonBall.y = tipY;
@@ -121,11 +136,34 @@ function shootCannonBall() {
 
 function updateCannonBallPosition() {
     if (cannonBall.summoned) {
+        if (cannonBallType === 'gravityBall') {
+            // Gravity ball behavior
+            cannonBall.vy += cannonBall.gravity; // Apply gravity
+        } else if (cannonBallType === 'bouncyBall') {
+            // Bouncy ball behavior
+            handleBouncyBallCollision(); // Check and handle bounces
+        }
+        
         cannonBall.x += cannonBall.vx;
         cannonBall.y += cannonBall.vy;
-        if (cannonBall.x < 0 || cannonBall.x > canvas.width || cannonBall.y < 0 || cannonBall.y > canvas.height) {
+        
+        // Reset if ball goes out of bounds
+        if (cannonBall.x < 0 || cannonBall.x > canvas.width || cannonBall.y < 0 || cannonBall.y > canvas.height & cannonBallType != "gravityBall" ) {
             cannonBall.summoned = false;
         }
+    }
+}
+
+function handleBouncyBallCollision() {
+    // If the ball hits the left or right wall, reverse the x velocity
+    if (cannonBall.x - cannonBall.radius <= 0 || cannonBall.x + cannonBall.radius >= canvas.width) {
+        cannonBall.vx = -cannonBall.vx;
+        cannonBall.bounces++;
+    }
+    // If the ball hits the top or bottom wall, reverse the y velocity
+    if (cannonBall.y - cannonBall.radius <= 0 || cannonBall.y + cannonBall.radius >= canvas.height) {
+        cannonBall.vy = -cannonBall.vy;
+        cannonBall.bounces++;
     }
 }
 
