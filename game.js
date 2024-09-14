@@ -130,52 +130,47 @@ function shootCannonBall() {
     cannonBall.x = tipX;
     cannonBall.y = tipY;
     
+    //I used SOH CAH TOA (not TOA) to calc angle
     cannonBall.vx = cannonBall.speed * Math.cos(cannon.angle - Math.PI / 2);
     cannonBall.vy = cannonBall.speed * Math.sin(cannon.angle - Math.PI / 2);
 }
 
+// Update cannonball physics based on its type
 function updateCannonBallPosition() {
     if (cannonBall.summoned) {
+        // Gravity Ball
         if (cannonBallType === 'gravityBall') {
-            // Gravity ball behavior
             cannonBall.vy += cannonBall.gravity; // Apply gravity
-        } else if (cannonBallType === 'bouncyBall') {
-            // Bouncy ball behavior
-            handleBouncyBallCollision(); // Check and handle bounces
         }
-        
+        // Update position
         cannonBall.x += cannonBall.vx;
         cannonBall.y += cannonBall.vy;
-        
-        // Reset if ball goes out of bounds
-        if (cannonBall.x < 0 || cannonBall.x > canvas.width || cannonBall.y < 0 || cannonBall.y > canvas.height & cannonBallType != "gravityBall" ) {
-            cannonBall.summoned = false;
+
+        // Check if cannonball goes off the screen on the pos X and neg X
+        if (cannonBall.x < 0 || cannonBall.x > canvas.width) {
+            cannonBall.summoned = false;  // Allow new shot
         }
     }
 }
 
-function handleBouncyBallCollision() {
-    // If the ball hits the left or right wall, reverse the x velocity
-    if (cannonBall.x - cannonBall.radius <= 0 || cannonBall.x + cannonBall.radius >= canvas.width) {
-        cannonBall.vx = -cannonBall.vx;
-        cannonBall.bounces++;
-    }
-    // If the ball hits the top or bottom wall, reverse the y velocity
-    if (cannonBall.y - cannonBall.radius <= 0 || cannonBall.y + cannonBall.radius >= canvas.height) {
-        cannonBall.vy = -cannonBall.vy;
-        cannonBall.bounces++;
+
+// Handle block collisions
+function handleBlockCollisions() {
+    if (cannonBall.bounces >= 3) {
+        cannonBall.summoned = false;  // Allows new shot
     }
 }
 
 function drawblocks() {
-    if (currentLevel && currentLevel.blocks) {
+    if (currentLevel && currentLevel.block) {
         ctx.fillStyle = 'brown';
-        currentLevel.blocks.forEach((block, index) => {
+        currentLevel.block.forEach((block, index) => {
             ctx.fillRect(block.x, block.y, block.width, block.height);
             console.log(`block ${index} drawn at:`, block.x, block.y, block.width, block.height);
         });
     }
 }
+
 
 function drawEvilKing() {
     if (currentLevel && currentLevel.evil_king && currentLevel.evil_king.length > 0) {
@@ -218,6 +213,7 @@ function loop() {
     drawEvilKing();
     drawCannon(cannon.angle);
     updateCannonBallPosition();
+    handleBlockCollisions();
     drawCannonBall();
     requestAnimationFrame(loop);
 }
