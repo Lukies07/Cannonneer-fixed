@@ -184,7 +184,7 @@ function handleBlockCollisions() {
 
 function drawblocks() {
     if (currentLevel && currentLevel.block) {
-        ctx.fillStyle = 'brown';
+        ctx.fillStyle = 'black';
         currentLevel.block.forEach((block, index) => {
             ctx.fillRect(block.x, block.y, block.width, block.height);
             console.log(`block ${index} drawn at:`, block.x, block.y, block.width, block.height);

@@ -1,15 +1,15 @@
 {
 "level_1": {
     "block": [
-        { "x": 1000, "y": 150, "width": 200, "height": 800 },
-        { "x": 500, "y": 0, "width": 100, "height": 600 }
+        { "x": 900, "y": 500, "width": 100, "height": 600 },
+        { "x": 900, "y": 0, "width": 100, "height": 200 }
     ],
     "breakableBlock": [
-        { "x": 300, "y": 900, "width": 200, "height": 200 },
-        { "x": 1500, "y": 500, "width": 200, "height": 200 }
+        { "x": 400, "y": 700, "width": 100, "height": 300 },
+        { "x": 900, "y": 200, "width": 100, "height": 300 }
     ],
     "evil_king": [
-        { "x": 1600, "y": 500, "width": 100, "height": 300}
+        { "x": 1800, "y": 800, "width": 100, "height": 200}
     ],
     "cannon": [
         { "x": 5, "y": 710}
