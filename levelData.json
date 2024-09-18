@@ -4,6 +4,10 @@
         { "x": 1000, "y": 150, "width": 200, "height": 800 },
         { "x": 500, "y": 0, "width": 100, "height": 600 }
     ],
+    "breakableBlock": [
+        { "x": 300, "y": 900, "width": 200, "height": 200 },
+        { "x": 1500, "y": 500, "width": 200, "height": 200 }
+    ],
     "evil_king": [
         { "x": 1600, "y": 500, "width": 100, "height": 300}
     ],
@@ -18,6 +22,7 @@
 
 "level_2": {
     "block": [],
+    "breakableBlock": [],
     "evil_king": [],
     "cannon": [
         { "x": 200, "y": 710}
@@ -30,6 +35,7 @@
 
 "level_3": {
     "block": [],
+    "breakableBlock": [],
     "evil_king": [],
     "cannon": [
         { "x": 400, "y": 710}
@@ -42,6 +48,7 @@
 
 "level_4": {
     "block": [],
+    "breakableBlock": [],
     "evil_king": [],
     "cannon": [
         { "x": 5, "y": 300}
@@ -54,6 +61,7 @@
 
 "level_5": {
     "block": [],
+    "breakableBlock": [],
     "evil_king": [],
     "cannon": [
         { "x": 50, "y": 250}

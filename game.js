@@ -64,15 +64,17 @@ canvas.addEventListener('click', function(event) {
 
 let gameInfoElement = document.getElementById('gameInfo');
 
-function updateGameInfo() {
-    let gravityBallText = cannonBallType === 'gravityBall' ? '<strong>Gravity ball</strong>' : 'Gravity ball';
-    let bouncyBallText = cannonBallType === 'bouncyBall' ? '<strong>Bouncy ball</strong>' : 'Bouncy ball';
+//this is the UI
+function updateGameUI() {
+    let gravityBallText = cannonBallType === 'gravityBall' ? '<span style="font-size: 25px; font-weight: bold;">(press 1) Gravity ball:</span>' : '(press 1) Gravity ball:';
+    let bouncyBallText = cannonBallType === 'bouncyBall' ? '<span style="font-size: 25px; font-weight: bold;">(press 2) Bouncy ball:</span>' : '(press 2) Bouncy ball:';
     
     gameInfoElement.innerHTML = `
-        ${gravityBallText}: <span style="color: green;">●</span><br>
-        ${bouncyBallText}: <span style="color: black;">●</span><br>
+        ${gravityBallText} <span style="color: green; font-size: 35px;">●</span><br>
+        ${bouncyBallText} <span style="color: black; font-size: 35px;">●</span><br><br>
         Ammo left: ${cannonBall.ammo}`;
 }
+
 
 //made it so you can't change the cannonBall type when it is summoned
 window.addEventListener('keydown', function(event) {
@@ -84,7 +86,7 @@ window.addEventListener('keydown', function(event) {
             cannonBallType = 'bouncyBall';
             console.log('Selected: Bouncy Ball');
         }
-        updateGameInfo(); // Update the game info when the ball type changes
+        updateGameUI(); // Update the game info when the ball type changes
     }
 });
 function startLevel(levelNumber) {
@@ -152,7 +154,7 @@ function shootCannonBall() {
     //I used SOH CAH TOA (not TOA) to calc angle
     cannonBall.vx = cannonBall.speed * Math.cos(cannon.angle - Math.PI / 2);
     cannonBall.vy = cannonBall.speed * Math.sin(cannon.angle - Math.PI / 2);
-    updateGameInfo();
+    updateGameUI();
 }
 
 // Update cannonball physics based on its type
@@ -173,7 +175,6 @@ function updateCannonBallPosition() {
     }
 }
 
-
 // Handle block collisions
 function handleBlockCollisions() {
     if (cannonBall.bounces >= 3) {
@@ -191,6 +192,15 @@ function drawblocks() {
     }
 }
 
+function drawBreakableBlocks() {
+    if (currentLevel && currentLevel.breakableBlock) {
+        ctx.fillStyle = 'blue';
+        currentLevel.breakableBlock.forEach((breakableBlock, index) => {
+            ctx.fillRect(breakableBlock.x, breakableBlock.y, breakableBlock.width, breakableBlock.height);
+            console.log(`breakableBlock ${index} drawn at:`, breakableBlock.x, breakableBlock.y, breakableBlock.width, breakableBlock.height);
+        });
+    }
+}
 
 function drawEvilKing() {
     if (currentLevel && currentLevel.evil_king && currentLevel.evil_king.length > 0) {
@@ -230,16 +240,17 @@ function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawDebugGrid();
     drawblocks();
+    drawBreakableBlocks();
     drawEvilKing();
     drawCannon(cannon.angle);
     updateCannonBallPosition();
     handleBlockCollisions();
     drawCannonBall();
-    updateGameInfo(); // Update the game info every frame
+    updateGameUI(); // Update the game info every frame
     requestAnimationFrame(loop);
 }
 
-// Call updateGameInfo initially to set the initial state
-updateGameInfo();
+// Call updateGameUI initially to set the initial state
+updateGameUI();
 
 loop();
