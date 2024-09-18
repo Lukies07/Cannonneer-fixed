@@ -62,17 +62,31 @@ canvas.addEventListener('click', function(event) {
     }
 });
 
-// Keypress event to switch between ball types
+let gameInfoElement = document.getElementById('gameInfo');
+
+function updateGameInfo() {
+    let gravityBallText = cannonBallType === 'gravityBall' ? '<strong>Gravity ball</strong>' : 'Gravity ball';
+    let bouncyBallText = cannonBallType === 'bouncyBall' ? '<strong>Bouncy ball</strong>' : 'Bouncy ball';
+    
+    gameInfoElement.innerHTML = `
+        ${gravityBallText}: <span style="color: green;">●</span><br>
+        ${bouncyBallText}: <span style="color: black;">●</span><br>
+        Ammo left: ${cannonBall.ammo}`;
+}
+
+//made it so you can't change the cannonBall type when it is summoned
 window.addEventListener('keydown', function(event) {
-    if (event.key === '1') {
-        cannonBallType = 'gravityBall';
-        console.log('Selected: Gravity Ball');
-    } else if (event.key === '2') {
-        cannonBallType = 'bouncyBall';
-        console.log('Selected: Bouncy Ball');
+    if (!cannonBall.summoned) {
+        if (event.key === '1') {
+            cannonBallType = 'gravityBall';
+            console.log('Selected: Gravity Ball');
+        } else if (event.key === '2') {
+            cannonBallType = 'bouncyBall';
+            console.log('Selected: Bouncy Ball');
+        }
+        updateGameInfo(); // Update the game info when the ball type changes
     }
 });
-
 function startLevel(levelNumber) {
     const levelKey = `level_${levelNumber}`;
     currentLevel = levelData[levelKey];
@@ -113,7 +127,12 @@ function drawCannonBall() {
     if (cannonBall.summoned) {
         ctx.beginPath();
         ctx.arc(cannonBall.x, cannonBall.y, cannonBall.radius, 0, 2 * Math.PI);
-        ctx.fillStyle = 'black';
+        if (cannonBallType == 'gravityBall') {
+            ctx.fillStyle = 'green';
+        }
+        else {
+            ctx.fillStyle = 'black'; 
+        }
         ctx.fill();
         ctx.closePath();
     }
@@ -133,6 +152,7 @@ function shootCannonBall() {
     //I used SOH CAH TOA (not TOA) to calc angle
     cannonBall.vx = cannonBall.speed * Math.cos(cannon.angle - Math.PI / 2);
     cannonBall.vy = cannonBall.speed * Math.sin(cannon.angle - Math.PI / 2);
+    updateGameInfo();
 }
 
 // Update cannonball physics based on its type
@@ -215,7 +235,11 @@ function loop() {
     updateCannonBallPosition();
     handleBlockCollisions();
     drawCannonBall();
+    updateGameInfo(); // Update the game info every frame
     requestAnimationFrame(loop);
 }
+
+// Call updateGameInfo initially to set the initial state
+updateGameInfo();
 
 loop();
