@@ -26,6 +26,7 @@ let cannonBall = {
     ammo: 10,
     gravity: 0.2, // Gravity acceleration
     bounces: 0,   // Number of bounces for the bouncy ball
+    drag: 0.02,
 };
 
 let cannonBallType = 'gravityBall'; // Default cannon ball mode
@@ -162,7 +163,8 @@ function updateCannonBallPosition() {
     if (cannonBall.summoned) {
         // Gravity Ball
         if (cannonBallType === 'gravityBall') {
-            cannonBall.vy += cannonBall.gravity; // Apply gravity
+            cannonBall.vy += (cannonBall.gravity + cannonBall.drag*0.75); // Apply gravity
+            cannonBall.vx -= cannonBall.drag;
         }
         // Update position
         cannonBall.x += cannonBall.vx;
