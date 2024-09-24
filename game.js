@@ -21,13 +21,16 @@ let cannonBall = {
     radius: 16,
     vx: 0,
     vy: 0,
-    speed: 20,
+    speed: 21,
     summoned: false,
     ammo: 10,
     gravity: 0.2, // Gravity acceleration
     bounces: 0,   // Number of bounces for the bouncy ball
-    drag: 0.02, 
-};
+    drag: 0.025, 
+    bounciness: 0.7,
+    onGround: false, // New property to track if the ball is on the ground
+    friction: 0.05,
+}
 
 let cannonBallType = 'gravityBall'; // Default cannon ball mode
 cannonImage.src = "images/cannon.png";
@@ -109,13 +112,11 @@ function updateCannonPosition(cannonData) {
     cannon.y = cannonData.y;
     cannon.pivotPoint.x = cannon.x + cannon.width / 2;
     cannon.pivotPoint.y = cannon.y + cannon.height * (1 - cannon.pivotOffset);
-    console.log('Updated cannon position:', cannon);
 }
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    console.log('Canvas resized:', canvas.width, 'x', canvas.height);
 }
 
 function drawCannon(angle = 0) {
@@ -174,7 +175,7 @@ function updateCannonBallPosition() {
             // Check if the ball is rolling
             if (!cannonBall.bouncing) {
                 // Reduce velocity as it rolls
-                if (Math.abs(cannonBall.vx) < 0.1) {
+                if (Math.abs(cannonBall.vx) < 0.09) {
                     cannonBall.vx = 0; // Stop rolling
                 }
             }
@@ -183,6 +184,33 @@ function updateCannonBallPosition() {
         // Update position based on velocity
         cannonBall.x += cannonBall.vx;
         cannonBall.y += cannonBall.vy;
+
+        // Handle collisions with the floor (update the onGround flag)
+        if (cannonBall.y + cannonBall.radius >= canvas.height) {
+            cannonBall.y = canvas.height - cannonBall.radius; // Stay on the floor
+            if (cannonBallType == 'gravityBall') {
+                cannonBall.vy *= -1 * cannonBall.bounciness; // Bounce
+                }
+
+            if (cannonBallType == 'bouncyBall') {
+                cannonBall.vy *= -1; // Bounce
+                }
+
+            if (Math.abs(cannonBall.vy) < 1) { // Small velocity threshold for bouncing
+                cannonBall.onGround = true; // Ball is now on the ground
+            } else {
+                cannonBall.onGround = false; // Still bouncing
+            }
+        } else {
+            cannonBall.onGround = false; // Mid-air
+        }
+
+        // Stop the ball only if it's on the ground and the velocities are near zero
+        if (cannonBall.onGround && Math.abs(cannonBall.vx) < 0.09 && Math.abs(cannonBall.vy) < 0.09) {
+            cannonBall.vx = 0;
+            cannonBall.vy = 0;
+            cannonBall.summoned = false; // Ball has stopped moving
+        }
 
         // Check if cannonball goes off the screen
         if (cannonBall.x < 0 || cannonBall.x > canvas.width) {
@@ -194,8 +222,6 @@ function updateCannonBallPosition() {
         handleWallCollisions(); // Check for wall collisions
     }
 }
-
-
 
 function handleWallCollisions() {
     if (cannonBall.summoned) {
@@ -213,11 +239,22 @@ function handleWallCollisions() {
 
         // Check for floor collision (bouncing)
         if (cannonBall.y + cannonBall.radius > canvas.height) {
-            cannonBall.y = canvas.height - cannonBall.radius; // Move the ball outside the floor
-            cannonBall.vy *= -1; // Reverse vertical velocity
+            cannonBall.y = canvas.height - cannonBall.radius;
+            if (cannonBallType == 'gravityBall') { // Move the ball outside the floor
+                cannonBall.vy *= -1*cannonBall.bounciness;
+            }
+            else {
+                cannonBall.vy *= -1
+            }
         }
+        if (cannonBallType == 'bouncyBall')
+            if (cannonBall.y + cannonBall.radius < 0) {
+                cannonBall.y = cannonBall.radius;
+                cannonBall.vy *= -1; // Reverse horizontal velocity
+            }
     }
 }
+
 
 function handleCollisions() {
     if (cannonBall.summoned) {
@@ -272,7 +309,6 @@ function drawblocks() {
         ctx.fillStyle = 'black';
         currentLevel.block.forEach((block, index) => {
             ctx.fillRect(block.x, block.y, block.width, block.height);
-            console.log(`block ${index} drawn at:`, block.x, block.y, block.width, block.height);
         });
     }
 }
@@ -282,7 +318,6 @@ function drawBreakableBlocks() {
         ctx.fillStyle = 'blue';
         currentLevel.breakableBlock.forEach((breakableBlock, index) => {
             ctx.fillRect(breakableBlock.x, breakableBlock.y, breakableBlock.width, breakableBlock.height);
-            console.log(`breakableBlock ${index} drawn at:`, breakableBlock.x, breakableBlock.y, breakableBlock.width, breakableBlock.height);
         });
     }
 }
@@ -292,7 +327,6 @@ function drawEvilKing() {
         const king = currentLevel.evil_king[0];
         ctx.fillStyle = 'red';
         ctx.fillRect(king.x, king.y, king.width, king.height);
-        console.log('Evil king drawn at:', king.x, king.y, king.width, king.height);
     }
 }
 //i had Ai temporarily implement this
