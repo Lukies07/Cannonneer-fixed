@@ -21,15 +21,16 @@ let cannonBall = {
     radius: 16,
     vx: 0,
     vy: 0,
-    speed: 21,
+    speed: 20,
     summoned: false,
     ammo: 10,
     gravity: 0.2, // Gravity acceleration
-    bounces: 0,   // Number of bounces for the bouncy ball
+    bounces: 0,
+    maxBounces: 10, // Number of bounces for the bouncy ball
     drag: 0.025, 
     bounciness: 0.7,
-    onGround: false, // New property to track if the ball is on the ground
-    friction: 0.05,
+    onGround: false, //track if the ball is on the ground
+    friction: 0.25,
 }
 
 let cannonBallType = 'gravityBall'; // Default cannon ball mode
@@ -145,7 +146,6 @@ function drawCannonBall() {
 function shootCannonBall() {
     cannonBall.ammo--;
     cannonBall.summoned = true;
-    cannonBall.bounces = 0; // Reset bounce count for bouncy ball
     
     let tipX = cannon.pivotPoint.x + ((cannon.height * 0.8) * (1 - cannon.pivotOffset)) * Math.cos(cannon.angle - Math.PI / 2);
     let tipY = cannon.pivotPoint.y + ((cannon.height * 0.8) * (1 - cannon.pivotOffset)) * Math.sin(cannon.angle - Math.PI / 2);
@@ -190,14 +190,25 @@ function updateCannonBallPosition() {
             cannonBall.y = canvas.height - cannonBall.radius; // Stay on the floor
             if (cannonBallType == 'gravityBall') {
                 cannonBall.vy *= -1 * cannonBall.bounciness; // Bounce
-                }
+            }
 
             if (cannonBallType == 'bouncyBall') {
                 cannonBall.vy *= -1; // Bounce
-                }
+            }
 
             if (Math.abs(cannonBall.vy) < 1) { // Small velocity threshold for bouncing
                 cannonBall.onGround = true; // Ball is now on the ground
+
+                // Apply friction to horizontal velocity
+                if (cannonBall.onGround) {
+                    if (cannonBall.vx > 0) {
+                        cannonBall.vx -= cannonBall.friction; // Friction slows rightward movement
+                        if (cannonBall.vx < 0) cannonBall.vx = 0; // Stop when velocity reaches 0
+                    } else if (cannonBall.vx < 0) {
+                        cannonBall.vx += cannonBall.friction; // Friction slows leftward movement
+                        if (cannonBall.vx > 0) cannonBall.vx = 0; // Stop when velocity reaches 0
+                    }
+                }
             } else {
                 cannonBall.onGround = false; // Still bouncing
             }
@@ -206,7 +217,7 @@ function updateCannonBallPosition() {
         }
 
         // Stop the ball only if it's on the ground and the velocities are near zero
-        if (cannonBall.onGround && Math.abs(cannonBall.vx) < 0.09 && Math.abs(cannonBall.vy) < 0.09) {
+        if (cannonBall.onGround && Math.abs(cannonBall.vx) < 0.5 && Math.abs(cannonBall.vy) < 0.5) {
             cannonBall.vx = 0;
             cannonBall.vy = 0;
             cannonBall.summoned = false; // Ball has stopped moving
@@ -222,6 +233,7 @@ function updateCannonBallPosition() {
         handleWallCollisions(); // Check for wall collisions
     }
 }
+
 
 function handleWallCollisions() {
     if (cannonBall.summoned) {
@@ -287,7 +299,7 @@ function handleCollisions() {
                     cannonBall.bounces++;
                 }
         
-                if (cannonBall.bounces >= 3) { // Limit the number of bounces if needed
+                if (cannonBall.bounces >= cannonBall.maxBounces) { // Limit the number of bounces if needed
                     cannonBall.summoned = false; // End the game after a certain number of bounces
                 }
             }
