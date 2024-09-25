@@ -2,22 +2,24 @@ body, html {
     margin: 0;
     padding: 0;
     overflow: hidden;
+    background-color: #d1ccca;
 }
 
 canvas {
     position: absolute;
-    top: 0px;
+    top: 0;
+    left: 0;
 }
 
 #gameInfo {
     position: absolute;
-    top: 10px;
-    left: 10px;
     background-color: rgba(255, 255, 255, 0.7);
+    margin: 20px;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 5vh;
     font-family: Arial, sans-serif;
     font-size: 20px;
+    text-align: center; /* Center the text inside the gameInfo */
 }
 
 .mainMenu {
@@ -38,4 +40,5 @@ canvas {
     border-radius: 4vh;
     background-color: #34aeff;
     border-color: #000000;
+    text-align: center; /* Center the text inside the level blocks */
 }

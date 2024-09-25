@@ -23,15 +23,17 @@ let cannonBall = {
     vy: 0,
     speed: 20,
     summoned: false,
-    ammo: 10,
-    gravity: 0.2, // Gravity acceleration
+    gravity: 0.2,
     bounces: 0,
-    maxBounces: 10, // Number of bounces for the bouncy ball
-    drag: 0.025, 
+    maxBounces: 5,
+    drag: 0.02, 
     bounciness: 0.7,
-    onGround: false, //track if the ball is on the ground
-    friction: 0.25,
-}
+    onGround: false,
+    friction: 0.2,
+    timeSinceLastMove: 0, // Time the cannonball has not moved
+    idleThreshold: 0.5, // 0.5 seconds of idle time
+    lastUpdateTime: Date.now() // For tracking time between updates
+};
 
 let cannonBallType = 'gravityBall'; // Default cannon ball mode
 cannonImage.src = "images/cannon.png";
@@ -71,17 +73,25 @@ let gameInfoElement = document.getElementById('gameInfo');
 
 //this is the UI
 function updateGameUI() {
-    let gravityBallText = cannonBallType === 'gravityBall' ? '<span style="font-size: 25px; font-weight: bold;">(press 1) Gravity ball:</span>' : '(press 1) Gravity ball:';
-    let bouncyBallText = cannonBallType === 'bouncyBall' ? '<span style="font-size: 25px; font-weight: bold;">(press 2) Bouncy ball:</span>' : '(press 2) Bouncy ball:';
-    
+    let gravityBallText = cannonBallType === 'gravityBall' ? '<span style="font-size: 25px; font-weight: bold;">Gravity ball:</span>' : 'Gravity ball:';
+    let bouncyBallText = cannonBallType === 'bouncyBall' ? '<span style="font-size: 25px; font-weight: bold;">Bouncy ball:</span>' : 'Bouncy ball:';
+
+    // Initialize UI text with cannonball info
+    let bouncesText = '';
+
+    // Only show bounces remaining if the bouncy ball is selected
+    if (cannonBallType === 'bouncyBall') {
+        bouncesText = `<span style="color: grey; font-size: 25px;">Bounces left: </span> ${cannonBall.maxBounces - cannonBall.bounces}<br>`;
+    }
+
     gameInfoElement.innerHTML = `
         ${gravityBallText} <span style="color: green; font-size: 35px;">●</span><br>
-        ${bouncyBallText} <span style="color: black; font-size: 35px;">●</span><br><br>
-        Ammo left: ${cannonBall.ammo}`;
+        ${bouncyBallText} <span style="color: black; font-size: 35px;">●</span><br>
+        <span style=" color: black; font-size: 20px;">${bouncesText}</span><br>
+        <span style="color: black; font-size: 20px;">Ammo left: ${cannonBall.ammo}</span><br><br>`
 }
 
-
-//made it so you can't change the cannonBall type when it is summoned
+//made it so you can't change the cannonBall type when it i s summoned
 window.addEventListener('keydown', function(event) {
     if (!cannonBall.summoned) {
         if (event.key === '1') {
@@ -94,6 +104,7 @@ window.addEventListener('keydown', function(event) {
         updateGameUI(); // Update the game info when the ball type changes
     }
 });
+
 function startLevel(levelNumber) {
     const levelKey = `level_${levelNumber}`;
     currentLevel = levelData[levelKey];
@@ -101,11 +112,18 @@ function startLevel(levelNumber) {
     if (currentLevel) {
         console.log('Starting level:', levelKey, currentLevel);
         updateCannonPosition(currentLevel.cannon[0]);
+        
+        // Set the cannonBall ammo from the level data
+        cannonBall.ammo = currentLevel.ammo || 0;
+        
+        // Set the max bounces for the cannonBall
+        cannonBall.maxBounces = currentLevel.cannonBallmaxBounces || 5;
     } else {
         console.error(`Level ${levelNumber} not found in level data`);
     }
     
     resizeCanvas();
+    updateGameUI(); // Update the UI with new ammo info
 }
 
 function updateCannonPosition(cannonData) {
@@ -143,17 +161,31 @@ function drawCannonBall() {
     }
 }
 
+function resetCannonBall() {
+    cannonBall.x = undefined;
+    cannonBall.y = undefined;
+    cannonBall.vx = 0;
+    cannonBall.vy = 0;
+    cannonBall.summoned = false;
+    cannonBall.bounces = 0;
+    cannonBall.onGround = false;
+    cannonBall.timeSinceLastMove = 0;
+    cannonBall.lastUpdateTime = Date.now();
+}
+
 function shootCannonBall() {
+    resetCannonBall(); // Reset properties before shooting
+
     cannonBall.ammo--;
     cannonBall.summoned = true;
-    
+
     let tipX = cannon.pivotPoint.x + ((cannon.height * 0.8) * (1 - cannon.pivotOffset)) * Math.cos(cannon.angle - Math.PI / 2);
     let tipY = cannon.pivotPoint.y + ((cannon.height * 0.8) * (1 - cannon.pivotOffset)) * Math.sin(cannon.angle - Math.PI / 2);
-    
+
     cannonBall.x = tipX;
     cannonBall.y = tipY;
-    
-    //I used SOH CAH TOA (not TOA) to calc angle
+
+    // Calculate initial velocity
     cannonBall.vx = cannonBall.speed * Math.cos(cannon.angle - Math.PI / 2);
     cannonBall.vy = cannonBall.speed * Math.sin(cannon.angle - Math.PI / 2);
     updateGameUI();
@@ -162,78 +194,77 @@ function shootCannonBall() {
 // Update cannonball physics based on its type
 function updateCannonBallPosition() {
     if (cannonBall.summoned) {
-        if (cannonBallType === 'gravityBall') {
-            cannonBall.vy += (cannonBall.gravity + cannonBall.drag * 0.75); // Apply gravity
+        const currentTime = Date.now();
+        const deltaTime = (currentTime - cannonBall.lastUpdateTime) / 1000; // Time passed in seconds
+        cannonBall.lastUpdateTime = currentTime;
+        
+        if (Math.abs(cannonBall.vx) < 0.1 && Math.abs(cannonBall.vy) < 0.1) {
+            // Ball is moving very slowly or not at all
+            cannonBall.timeSinceLastMove += deltaTime;
+        } else {
+            // Ball is moving, reset the idle timer
+            cannonBall.timeSinceLastMove = 0;
+        }
 
-            // Apply drag based on direction
+        // Despawn the cannonball if it's been idle for too long
+        if (cannonBall.timeSinceLastMove >= cannonBall.idleThreshold) {
+            cannonBall.summoned = false;
+            cannonBall.timeSinceLastMove = 0; // Reset the idle time
+            return; // Skip further processing since the ball is despawned
+        }
+
+        // Apply gravity and other physics like before
+        if (cannonBallType === 'gravityBall') {
+            cannonBall.vy += (cannonBall.gravity + cannonBall.drag * 0.75);
+
             if (cannonBall.vx > 0) {
-                cannonBall.vx -= cannonBall.drag; // Moving right, reduce velocity
+                cannonBall.vx -= cannonBall.drag;
             } else if (cannonBall.vx < 0) {
-                cannonBall.vx += cannonBall.drag; // Moving left, increase velocity
+                cannonBall.vx += cannonBall.drag;
             }
 
-            // Check if the ball is rolling
             if (!cannonBall.bouncing) {
-                // Reduce velocity as it rolls
-                if (Math.abs(cannonBall.vx) < 0.09) {
-                    cannonBall.vx = 0; // Stop rolling
+                if (Math.abs(cannonBall.vx) < 0.05) {
+                    cannonBall.vx = 0;
                 }
             }
         }
 
-        // Update position based on velocity
         cannonBall.x += cannonBall.vx;
         cannonBall.y += cannonBall.vy;
 
-        // Handle collisions with the floor (update the onGround flag)
+        // Handle collisions with the floor and walls
         if (cannonBall.y + cannonBall.radius >= canvas.height) {
-            cannonBall.y = canvas.height - cannonBall.radius; // Stay on the floor
-            if (cannonBallType == 'gravityBall') {
-                cannonBall.vy *= -1 * cannonBall.bounciness; // Bounce
-            }
+            cannonBall.y = canvas.height - cannonBall.radius;
+            cannonBall.vy *= -1 * cannonBall.bounciness;
 
-            if (cannonBallType == 'bouncyBall') {
-                cannonBall.vy *= -1; // Bounce
-            }
-
-            if (Math.abs(cannonBall.vy) < 1) { // Small velocity threshold for bouncing
-                cannonBall.onGround = true; // Ball is now on the ground
-
-                // Apply friction to horizontal velocity
+            if (Math.abs(cannonBall.vy) < 1) {
+                cannonBall.onGround = true;
                 if (cannonBall.onGround) {
                     if (cannonBall.vx > 0) {
-                        cannonBall.vx -= cannonBall.friction; // Friction slows rightward movement
-                        if (cannonBall.vx < 0) cannonBall.vx = 0; // Stop when velocity reaches 0
+                        cannonBall.vx -= cannonBall.friction;
+                        if (cannonBall.vx < 0) cannonBall.vx = 0;
                     } else if (cannonBall.vx < 0) {
-                        cannonBall.vx += cannonBall.friction; // Friction slows leftward movement
-                        if (cannonBall.vx > 0) cannonBall.vx = 0; // Stop when velocity reaches 0
+                        cannonBall.vx += cannonBall.friction;
+                        if (cannonBall.vx > 0) cannonBall.vx = 0;
                     }
                 }
             } else {
-                cannonBall.onGround = false; // Still bouncing
+                cannonBall.onGround = false;
             }
         } else {
-            cannonBall.onGround = false; // Mid-air
+            cannonBall.onGround = false;
         }
 
-        // Stop the ball only if it's on the ground and the velocities are near zero
-        if (cannonBall.onGround && Math.abs(cannonBall.vx) < 0.5 && Math.abs(cannonBall.vy) < 0.5) {
-            cannonBall.vx = 0;
-            cannonBall.vy = 0;
-            cannonBall.summoned = false; // Ball has stopped moving
-        }
-
-        // Check if cannonball goes off the screen
+        // Check if the ball goes off-screen
         if (cannonBall.x < 0 || cannonBall.x > canvas.width) {
-            cannonBall.summoned = false; // Allow new shot
+            cannonBall.summoned = false;
         }
 
-        // Handle collisions after updating position
         handleCollisions();
-        handleWallCollisions(); // Check for wall collisions
+        handleWallCollisions();
     }
 }
-
 
 function handleWallCollisions() {
     if (cannonBall.summoned) {
@@ -241,69 +272,100 @@ function handleWallCollisions() {
         if (cannonBall.x - cannonBall.radius < 0) {
             cannonBall.x = cannonBall.radius; // Move the ball outside the wall
             cannonBall.vx *= -1; // Reverse horizontal velocity
+            if (cannonBallType === 'bouncyBall') {
+                cannonBall.bounces++;
+            }
         }
         
         // Check right wall
         if (cannonBall.x + cannonBall.radius > canvas.width) {
             cannonBall.x = canvas.width - cannonBall.radius; // Move the ball outside the wall
             cannonBall.vx *= -1; // Reverse horizontal velocity
+            if (cannonBallType === 'bouncyBall') {
+                cannonBall.bounces++;
+            }
         }
 
         // Check for floor collision (bouncing)
         if (cannonBall.y + cannonBall.radius > canvas.height) {
             cannonBall.y = canvas.height - cannonBall.radius;
             if (cannonBallType == 'gravityBall') { // Move the ball outside the floor
-                cannonBall.vy *= -1*cannonBall.bounciness;
+                cannonBall.vy *= -1 * cannonBall.bounciness;  
+            } else {
+                cannonBall.vy *= -1;
             }
-            else {
-                cannonBall.vy *= -1
+
+            if (cannonBallType === 'bouncyBall') {
+                cannonBall.bounces++;
             }
         }
-        if (cannonBallType == 'bouncyBall')
-            if (cannonBall.y + cannonBall.radius < 0) {
-                cannonBall.y = cannonBall.radius;
-                cannonBall.vy *= -1; // Reverse horizontal velocity
-            }
+
+        // Check for roof collision
+        if (cannonBallType === 'bouncyBall' && cannonBall.y - cannonBall.radius < 0) {
+            cannonBall.y = cannonBall.radius;
+            cannonBall.vy *= -1; // Reverse vertical velocity
+            cannonBall.bounces++;
+        }
+
+        // Deactivate the ball after reaching max bounces
+        if (cannonBall.bounces >= cannonBall.maxBounces) {
+            cannonBall.summoned = false; // End the game after reaching the bounce limit
+        }
     }
 }
 
-
 function handleCollisions() {
     if (cannonBall.summoned) {
+        // Handle regular block collisions
         currentLevel.block.forEach(block => {
             if (circleRectCollision(cannonBall, block)) {
-                // Determine the side of the collision
-                let overlapX = Math.min(cannonBall.x + cannonBall.radius - block.x, block.x + block.width - cannonBall.x - cannonBall.radius);
-                let overlapY = Math.min(cannonBall.y + cannonBall.radius - block.y, block.y + block.height - cannonBall.y - cannonBall.radius);
-                
-                if (overlapX < overlapY) {
-                    // Horizontal collision
-                    if (cannonBall.vx > 0) {
-                        cannonBall.x = block.x - cannonBall.radius; // Move the ball outside the block
-                    } else {
-                        cannonBall.x = block.x + block.width + cannonBall.radius; // Move the ball outside the block
-                    }
-                    cannonBall.vx *= -1; // Reverse horizontal velocity
-                } else {
-                    // Vertical collision
-                    if (cannonBall.vy > 0) {
-                        cannonBall.y = block.y - cannonBall.radius; // Move the ball outside the block
-                    } else {
-                        cannonBall.y = block.y + block.height + cannonBall.radius; // Move the ball outside the block
-                    }
-                    cannonBall.vy *= -1; // Reverse vertical velocity
-                }
-                
-                // Handle bounces
-                if (cannonBallType == 'bouncyBall') {
-                    cannonBall.bounces++;
-                }
-        
-                if (cannonBall.bounces >= cannonBall.maxBounces) { // Limit the number of bounces if needed
-                    cannonBall.summoned = false; // End the game after a certain number of bounces
-                }
+                handleBlockCollision(cannonBall, block);
             }
         });
+
+        // Handle breakable block collisions
+        currentLevel.breakableBlock = currentLevel.breakableBlock.filter(breakableBlock => {
+            if (circleRectCollision(cannonBall, breakableBlock)) {
+                handleBlockCollision(cannonBall, breakableBlock);
+                return false; // Remove block after collision
+            }
+            return true; // Keep the block if no collision
+        });
+    }
+}
+
+// New function to handle block and breakable block collisions
+function handleBlockCollision(cannonBall, block) {
+    // Determine the side of the collision
+    let overlapX = Math.min(cannonBall.x + cannonBall.radius - block.x, block.x + block.width - cannonBall.x - cannonBall.radius);
+    let overlapY = Math.min(cannonBall.y + cannonBall.radius - block.y, block.y + block.height - cannonBall.y - cannonBall.radius);
+
+    if (overlapX < overlapY) {
+        // Horizontal collision
+        if (cannonBall.vx > 0) {
+            cannonBall.x = block.x - cannonBall.radius; // Move the ball outside the block
+        } else {
+            cannonBall.x = block.x + block.width + cannonBall.radius; // Move the ball outside the block
+        }
+        cannonBall.vx *= -1; // Reverse horizontal velocity
+    } else {
+        // Vertical collision
+        if (cannonBall.vy > 0) {
+            cannonBall.y = block.y - cannonBall.radius; // Move the ball outside the block
+        } else {
+            cannonBall.y = block.y + block.height + cannonBall.radius; // Move the ball outside the block
+        }
+        cannonBall.vy *= -1; // Reverse vertical velocity
+    }
+
+    // Handle bounces
+    if (cannonBallType === 'bouncyBall') {
+        cannonBall.bounces++;
+    }
+
+    // Deactivate the ball after reaching max bounces
+    if (cannonBall.bounces >= cannonBall.maxBounces) {
+        cannonBall.summoned = false;
     }
 }
 

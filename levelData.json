@@ -12,12 +12,14 @@
         { "x": 1800, "y": 800, "width": 100, "height": 200}
     ],
     "cannon": [
-        { "x": 5, "y": 710}
+        { "x": 0, "y": 714}
     ],
     "ballType":[
         "bouncyBall",
         "gravityBall"
-    ]
+    ],
+    "cannonBallmaxBounces": 5,
+    "ammo": 3
 },
 
 "level_2": {
@@ -25,12 +27,14 @@
     "breakableBlock": [],
     "evil_king": [],
     "cannon": [
-        { "x": 200, "y": 710}
+        { "x": 200, "y": 720}
     ] ,
     "ballType":[
         "bouncyBall",
         "gravityBall"
-    ]           
+    ],
+    "cannonBallmaxBounces": 5,
+    "ammo": 3      
 },
 
 "level_3": {
@@ -43,7 +47,9 @@
     "ballType":[
         "bouncyBall",
         "gravityBall"
-    ]           
+    ],
+    "cannonBallmaxBounces": 5,
+    "ammo": 3         
 },
 
 "level_4": {
@@ -56,7 +62,9 @@
     "ballType":[
         "bouncyBall",
         "gravityBall"
-    ]            
+    ],
+    "cannonBallmaxBounces": 5,
+    "ammo": 3            
 },
 
 "level_5": {
@@ -69,6 +77,8 @@
     "ballType":[
         "bouncyBall",
         "gravityBall"
-    ]            
+    ],
+    "cannonBallmaxBounces": 5,
+    "ammo": 3            
 }
 }
