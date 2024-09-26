@@ -15,7 +15,8 @@ canvas {
     position: absolute;
     background-color: rgba(255, 255, 255, 0.7);
     margin: 20px;
-    padding: 10px;
+    padding: 15px;
+    padding-top: 10px;
     border-radius: 5vh;
     font-family: Arial, sans-serif;
     font-size: 20px;
