@@ -26,10 +26,10 @@ let cannonBall = {
     gravity: 0.2,
     bounces: 0,
     maxBounces: 5,
-    drag: 0.02, 
+    drag: 0.005, 
     bounciness: 0.7,
     onGround: false,
-    friction: 0.2,
+    friction: 0.05,
     timeSinceLastMove: 0, // Time the cannonball has not moved
     idleThreshold: 0.5, // 0.5 seconds of idle time
     lastUpdateTime: Date.now() // For tracking time between updates
@@ -241,7 +241,6 @@ function updateCannonBallPosition() {
         handleWallCollisions();
     }
 }
-
 function handleWallCollisions() {
     if (cannonBall.summoned) {
         let collisionOccurred = false;
@@ -263,7 +262,7 @@ function handleWallCollisions() {
         // Bottom wall (floor)
         if (cannonBall.y + cannonBall.radius > canvas.height) {
             cannonBall.y = canvas.height - cannonBall.radius;
-            if (cannonBallType === 'gravityBall') {
+            if (cannonBallType === 'bouncyBall') {
                 cannonBall.vy *= -1 * cannonBall.bounciness;
             } else {
                 cannonBall.vy *= -1; // Bouncy ball maintains full velocity
@@ -271,8 +270,8 @@ function handleWallCollisions() {
             collisionOccurred = true;
         }
 
-        // Top wall (ceiling)
-        if (cannonBall.y - cannonBall.radius < 0) {
+        // Top wall (ceiling) - only for bouncy ball
+        if (cannonBallType === 'bouncyBall' && cannonBall.y - cannonBall.radius < 0) {
             cannonBall.y = cannonBall.radius;
             cannonBall.vy *= -1;
             collisionOccurred = true;
@@ -291,6 +290,7 @@ function handleWallCollisions() {
     }
 }
 
+
 function handleBlockCollision(cannonBall, block) {
     // Determine the side of the collision
     let overlapX = Math.min(cannonBall.x + cannonBall.radius - block.x, block.x + block.width - cannonBall.x - cannonBall.radius);
@@ -307,11 +307,19 @@ function handleBlockCollision(cannonBall, block) {
     } else {
         // Vertical collision
         if (cannonBall.vy > 0) {
+            // Ball is falling and hits the top of a block
             cannonBall.y = block.y - cannonBall.radius;
+
+            if (cannonBallType === 'gravityBall') {
+                cannonBall.vy *= -1 * cannonBall.bounciness;
+            } else {
+                cannonBall.vy *= -1;  // Bouncy ball keeps bouncing with full force
+            }
         } else {
+            // Ball hits the bottom of a block
             cannonBall.y = block.y + block.height + cannonBall.radius;
+            cannonBall.vy *= -1;
         }
-        cannonBall.vy *= -1;
     }
 
     // Increment bounce counter only for bouncy ball
@@ -325,6 +333,7 @@ function handleBlockCollision(cannonBall, block) {
         cannonBall.summoned = false;
     }
 }
+
 
 function handleCollisions() {
     if (cannonBall.summoned) {
