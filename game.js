@@ -1,6 +1,8 @@
 let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 let cannonImage = new Image();
+let evilRookImage = new Image();
+evilRookImage.src = "images/evil_rook.png";
 
 let levelData;
 let currentLevel;
@@ -26,7 +28,7 @@ let cannonBall = {
     gravity: 0.2,
     bounces: 0,
     maxBounces: 5,
-    drag: 0.005,
+    drag: 0.025,
     bounciness: 0.6,
     onGround: false,
     friction: 0.2,
@@ -218,11 +220,15 @@ function updateCannonBallPosition() {
         if (cannonBallType === 'gravityBall') {
             cannonBall.vy += cannonBall.gravity;
 
+            // Apply drag based on velocity and cannonBall.drag
+            cannonBall.vx *= (1 - cannonBall.drag * deltaTime);
+            cannonBall.vy *= (1 - cannonBall.drag * deltaTime);
+
             // Apply velocity-dependent friction
             const speed = Math.sqrt(cannonBall.vx * cannonBall.vx + cannonBall.vy * cannonBall.vy);
-            const frictionEffect = Math.min(1 / (speed + 1), 0.5); // More effect when speed is low
+            const frictionEffect = Math.min(cannonBall.friction / (speed + 1), cannonBall.friction); // Scaled by speed
 
-            // Apply friction to the x and y velocity
+            // Apply friction to the x velocity
             if (cannonBall.vx > 0) {
                 cannonBall.vx -= cannonBall.friction * frictionEffect;
             } else if (cannonBall.vx < 0) {
@@ -248,6 +254,7 @@ function updateCannonBallPosition() {
         handleWallCollisions();
     }
 }
+
 
 function handleWallCollisions() {
     if (cannonBall.summoned) {
@@ -377,8 +384,8 @@ function handleCollisions() {
         });
 
         // Handle Evil King collision
-        if (currentLevel.evil_king && currentLevel.evil_king.length > 0) {
-            const king = currentLevel.evil_king[0];
+        if (currentLevel.evil_rook && currentLevel.evil_rook.length > 0) {
+            const king = currentLevel.evil_rook[0];
             if (circleRectCollision(cannonBall, king)) {
                 handleEvilKingCollision();
             }
@@ -391,7 +398,7 @@ function handleEvilKingCollision() {
     // Stop the game, or trigger a win condition here
     cannonBall.summoned = false;  // Despawn the cannonball
     // You can add additional logic such as moving to the next level or displaying a message
-    alert('You defeated the Evil King!');
+    alert('You defeated the Evil Rook!');
 }
 
 // Helper function for circle-rectangle collision detection
@@ -422,12 +429,19 @@ function drawBreakableBlocks() {
 }
 
 function drawEvilKing() {
-    if (currentLevel && currentLevel.evil_king && currentLevel.evil_king.length > 0) {
-        const king = currentLevel.evil_king[0];
-        ctx.fillStyle = 'red';
-        ctx.fillRect(king.x, king.y, king.width, king.height);
+    if (currentLevel && currentLevel.evil_rook && currentLevel.evil_rook.length > 0) {
+        const king = currentLevel.evil_rook[0];
+        
+        if (evilRookImage.complete) {
+            ctx.drawImage(evilRookImage, king.x, king.y, king.width, king.height);
+        } else {
+            evilRookImage.onload = () => {
+                ctx.drawImage(evilRookImage, king.x, king.y, king.width, king.height);
+            };
+        }
     }
 }
+
 
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);

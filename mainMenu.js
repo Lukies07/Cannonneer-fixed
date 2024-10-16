@@ -102,7 +102,7 @@ function updateCannonBallPosition() {
 }
 
 function getLevelBoundingBoxes() {
-    const levels = ['level1', 'level2', 'level3', 'level4', 'level5'];
+    const levels = ['level1', 'level2', 'level3'];
     return levels.map(levelId => {
         const element = document.getElementById(levelId);
         const rect = element.getBoundingClientRect();
