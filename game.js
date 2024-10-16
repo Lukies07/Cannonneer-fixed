@@ -27,7 +27,7 @@ let cannonBall = {
     bounces: 0,
     maxBounces: 5,
     drag: 0.005,
-    bounciness: 0.7,
+    bounciness: 0.6,
     onGround: false,
     friction: 0.2,
     timeSinceLastMove: 0, // Time the cannonball has not moved
@@ -192,6 +192,7 @@ function shootCannonBall() {
 }
 
 // Update cannonball physics based on its type
+// Update cannonball physics based on its type
 function updateCannonBallPosition() {
     if (cannonBall.summoned) {
         const currentTime = Date.now();
@@ -216,17 +217,23 @@ function updateCannonBallPosition() {
         // Apply gravity only for gravityBall
         if (cannonBallType === 'gravityBall') {
             cannonBall.vy += cannonBall.gravity;
-            
-            // Apply drag
+
+            // Apply velocity-dependent friction
+            const speed = Math.sqrt(cannonBall.vx * cannonBall.vx + cannonBall.vy * cannonBall.vy);
+            const frictionEffect = Math.min(1 / (speed + 1), 0.5); // More effect when speed is low
+
+            // Apply friction to the x and y velocity
             if (cannonBall.vx > 0) {
-                cannonBall.vx -= cannonBall.drag;
+                cannonBall.vx -= cannonBall.friction * frictionEffect;
             } else if (cannonBall.vx < 0) {
-                cannonBall.vx += cannonBall.drag;
+                cannonBall.vx += cannonBall.friction * frictionEffect;
             }
 
             if (Math.abs(cannonBall.vx) < 0.05) {
                 cannonBall.vx = 0;
             }
+
+            // Similar friction logic can be applied to vy if necessary
         }
 
         cannonBall.x += cannonBall.vx;
@@ -241,6 +248,7 @@ function updateCannonBallPosition() {
         handleWallCollisions();
     }
 }
+
 function handleWallCollisions() {
     if (cannonBall.summoned) {
         let collisionOccurred = false;
@@ -271,7 +279,7 @@ function handleWallCollisions() {
         if (cannonBall.y + cannonBall.radius > canvas.height) {
             cannonBall.y = canvas.height - cannonBall.radius;
             if (cannonBallType === 'gravityBall') {
-                cannonBall.vy *= -0.5; // Reduce vertical speed by 50% when hitting the floor
+                cannonBall.vy *= -cannonBall.bounciness; // Reduce vertical speed by 50% when hitting the floor
             } else {
                 cannonBall.vy *= -1; // Bouncy ball maintains full velocity
             }
@@ -350,7 +358,6 @@ function handleBlockCollision(cannonBall, block) {
     }
 }
 
-
 function handleCollisions() {
     if (cannonBall.summoned) {
         // Handle regular block collisions
@@ -421,35 +428,9 @@ function drawEvilKing() {
         ctx.fillRect(king.x, king.y, king.width, king.height);
     }
 }
-//i had Ai temporarily implement this
-function drawDebugGrid() {
-    ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
-    ctx.lineWidth = 1;
-    
-    // Draw vertical lines
-    for (let x = 0; x <= canvas.width; x += 100) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-        ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-        ctx.fillText(x.toString(), x, 10);
-    }
-    
-    // Draw horizontal lines
-    for (let y = 0; y <= canvas.height; y += 100) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-        ctx.fillStyle = 'rgba(200, 200, 200, 0.5)';
-        ctx.fillText(y.toString(), 0, y);
-    }
-}
 
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawDebugGrid();
     drawblocks();
     drawBreakableBlocks();
     drawEvilKing();
