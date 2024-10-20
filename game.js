@@ -194,7 +194,6 @@ function shootCannonBall() {
 }
 
 // Update cannonball physics based on its type
-// Update cannonball physics based on its type
 function updateCannonBallPosition() {
     if (cannonBall.summoned) {
         const currentTime = Date.now();
@@ -252,9 +251,13 @@ function updateCannonBallPosition() {
 
         handleCollisions();
         handleWallCollisions();
+
+        // New check: despawn the cannonball if it's on the ground and not moving
+        if (cannonBall.y + cannonBall.radius >= canvas.height && Math.abs(cannonBall.vx) < 0.1 && Math.abs(cannonBall.vy) < 0.1) {
+            cannonBall.summoned = false; // Despawn the cannonball
+        }
     }
 }
-
 
 function handleWallCollisions() {
     if (cannonBall.summoned) {
@@ -313,82 +316,117 @@ function handleWallCollisions() {
     }
 }
 
+function handleCollisions() {
+    if (!cannonBall.summoned) return;
 
-//gets called after cannonball pos is updated to handle any collisions:
-function handleBlockCollision(cannonBall, block) {
-    // Determine the side of the collision
-    let overlapX = Math.min(cannonBall.x + cannonBall.radius - block.x, block.x + block.width - cannonBall.x - cannonBall.radius);
-    let overlapY = Math.min(cannonBall.y + cannonBall.radius - block.y, block.y + block.height - cannonBall.y - cannonBall.radius);
-
-    if (overlapX < overlapY) {
-        // Horizontal collision
-        if (cannonBall.vx > 0) {
-            cannonBall.x = block.x - cannonBall.radius;
-        } else {
-            cannonBall.x = block.x + block.width + cannonBall.radius;
+    // Check collisions with regular blocks
+    currentLevel.block.forEach(block => {
+        if (checkDetailedCollision(cannonBall, block)) {
+            resolveCollision(cannonBall, block);
         }
-        cannonBall.vx *= -1; // Reverse direction on horizontal collision
+    });
 
-        // If gravityBall, lose half the velocity on horizontal collision
-        if (cannonBallType === 'gravityBall') {
-            cannonBall.vx *= 0.5;
+    // Check collisions with breakable blocks
+    currentLevel.breakableBlock = currentLevel.breakableBlock.filter(block => {
+        if (checkDetailedCollision(cannonBall, block)) {
+            resolveCollision(cannonBall, block);
+            return false; // Remove breakable block after collision
         }
+        return true;
+    });
 
-    } else {
-        // Vertical collision
-        if (cannonBall.vy > 0) {
-            // Ball is falling and hits the top of a block
-            cannonBall.y = block.y - cannonBall.radius;
-            
-            // If gravityBall, apply bounciness on vertical collisions (top of block)
-            if (cannonBallType === 'gravityBall') {
-                cannonBall.vy *= -1 * cannonBall.bounciness;
-            } else {
-                cannonBall.vy *= -1;  // Bouncy ball keeps bouncing with full force
-            }
-        } else {
-            // Ball hits the bottom of a block
-            cannonBall.y = block.y + block.height + cannonBall.radius;
-            cannonBall.vy *= -1; // Reverse vertical velocity
-        }
-    }
-
-    // Increment bounce counter only for bouncy ball
-    if (cannonBallType === 'bouncyBall') {
-        cannonBall.bounces++;
-        updateGameUI(); // Update UI after incrementing bounces
-    }
-
-    // Deactivate the ball after reaching max bounces
-    if (cannonBall.bounces >= cannonBall.maxBounces) {
-        cannonBall.summoned = false;
+    // Check collision with Evil Rook
+    if (currentLevel.evil_rook?.[0] && checkDetailedCollision(cannonBall, currentLevel.evil_rook[0])) {
+        handleEvilKingCollision();
     }
 }
 
-function handleCollisions() {
-    if (cannonBall.summoned) {
-        // Handle regular block collisions
-        currentLevel.block.forEach(block => {
-            if (circleRectCollision(cannonBall, block)) {
-                handleBlockCollision(cannonBall, block);
-            }
-        });
+function checkDetailedCollision(ball, block) {
+    // Find the closest point on the block to the ball's center
+    const closestX = Math.max(block.x, Math.min(ball.x, block.x + block.width));
+    const closestY = Math.max(block.y, Math.min(ball.y, block.y + block.height));
 
-        // Handle breakable block collisions
-        currentLevel.breakableBlock = currentLevel.breakableBlock.filter(breakableBlock => {
-            if (circleRectCollision(cannonBall, breakableBlock)) {
-                handleBlockCollision(cannonBall, breakableBlock);
-                return false; // Remove block after collision
-            }
-            return true; // Keep the block if no collision
-        });
+    // Calculate distance between the ball's center and this closest point
+    const distanceX = ball.x - closestX;
+    const distanceY = ball.y - closestY;
+    const distanceSquared = (distanceX * distanceX) + (distanceY * distanceY);
 
-        // Handle Evil King collision
-        if (currentLevel.evil_rook && currentLevel.evil_rook.length > 0) {
-            const king = currentLevel.evil_rook[0];
-            if (circleRectCollision(cannonBall, king)) {
-                handleEvilKingCollision();
+    // Check if the distance is less than the ball's radius
+    return distanceSquared < (ball.radius * ball.radius);
+}
+
+function resolveCollision(ball, block) {
+    // Calculate the ball's center position relative to the block's center
+    const blockCenterX = block.x + block.width / 2;
+    const blockCenterY = block.y + block.height / 2;
+    const ballToBlockX = ball.x - blockCenterX;
+    const ballToBlockY = ball.y - blockCenterY;
+
+    // Calculate overlap on both axes
+    const overlapX = (block.width / 2 + ball.radius) - Math.abs(ballToBlockX);
+    const overlapY = (block.height / 2 + ball.radius) - Math.abs(ballToBlockY);
+
+    // Determine collision side (smaller overlap indicates the collision side)
+    if (overlapX < overlapY) {
+        // Horizontal collision
+        const direction = Math.sign(ballToBlockX);
+        ball.x = blockCenterX + direction * (block.width / 2 + ball.radius);
+        ball.vx *= -1; // Reverse horizontal velocity
+
+        if (cannonBallType === 'gravityBall') {
+            ball.vx *= 0.5; // Reduce horizontal velocity for gravity ball
+        }
+    } else {
+        // Vertical collision
+        const direction = Math.sign(ballToBlockY);
+        ball.y = blockCenterY + direction * (block.height / 2 + ball.radius);
+        
+        if (cannonBallType === 'gravityBall') {
+            ball.vy *= -ball.bounciness; // Apply bounciness for gravity ball
+            
+            // If hitting the top of a block
+            if (direction < 0) {
+                ball.onGround = true;
+                
+                // Apply friction to horizontal velocity when on ground
+                if (Math.abs(ball.vx) > 0.1) {
+                    ball.vx *= (1 - ball.friction);
+                } else {
+                    ball.vx = 0;
+                }
+
+                // Check if the ball has essentially stopped moving while on top of the block
+                if (Math.abs(ball.vx) < 0.1 && Math.abs(ball.vy) < 0.1) {
+                    ball.vx = 0;
+                    ball.vy = 0;
+                    ball.summoned = false; // Despawn the ball when it stops on a block
+                }
             }
+        } else {
+            ball.vy *= -1; // Full bounce for bouncy ball
+        }
+    }
+
+    // Handle bounce counting for bouncy ball
+    if (cannonBallType === 'bouncyBall') {
+        ball.bounces++;
+        updateGameUI();
+        
+        if (ball.bounces >= ball.maxBounces) {
+            ball.summoned = false;
+        }
+    }
+
+    // Ensure minimum velocity to prevent getting stuck
+    const minVelocity = 0.1;
+    if (Math.abs(ball.vx) < minVelocity && Math.abs(ball.vy) < minVelocity) {
+        ball.vx = 0;
+        ball.vy = 0;
+        ball.timeSinceLastMove += 1/60; // Assume 60 FPS
+        
+        // If it's a gravity ball and it's on top of a block, despawn it
+        if (cannonBallType === 'gravityBall' && ball.onGround) {
+            ball.summoned = false;
         }
     }
 }
