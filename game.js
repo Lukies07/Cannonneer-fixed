@@ -6,7 +6,7 @@ evilRookImage.src = "images/evil_rook.png";
 
 let levelData;
 let currentLevel;
-
+//cannon properties
 let cannon = {
     x: undefined,
     y: undefined,
@@ -16,20 +16,20 @@ let cannon = {
     pivotOffset: 0.166,
     pivotPoint: { x: undefined, y: undefined },
 };
-
+//cannonball properties
 let cannonBall = {
-    x: undefined,
-    y: undefined,
-    radius: 16,
-    vx: 0,
-    vy: 0,
-    speed: 20,
+    x: undefined, //pos
+    y: undefined, //pos
+    radius: 16, //size
+    vx: 0, //speed
+    vy: 0, //speed
+    speed: 20, //speed
     summoned: false,
-    gravity: 0.2,
+    gravity: 0.2, //gravity effect
     bounces: 0,
-    maxBounces: 5,
-    drag: 0.025,
-    bounciness: 0.6,
+    maxBounces: undefined,
+    drag: 0.025, //everytime the cannonBall pos is updated the drag is added so it slowly reduces the vx and vy
+    bounciness: 0.6, //the lower the vaule the less bouncy it is
     onGround: false,
     friction: 0.2,
     timeSinceLastMove: 0, // Time the cannonball has not moved
@@ -57,6 +57,7 @@ fetch('./levelData.json')
 window.addEventListener('resize', resizeCanvas);
 cannonImage.onload = resizeCanvas;
 
+//listens for mousemoving
 canvas.addEventListener('mousemove', (event) => {
     let mouseX = event.clientX;
     let mouseY = event.clientY;
@@ -64,7 +65,7 @@ canvas.addEventListener('mousemove', (event) => {
     let dy = mouseY - cannon.pivotPoint.y;
     cannon.angle = Math.atan2(dy, dx) + Math.PI / 2;
 });
-
+//detects if user clicked, shoots cannonball if ammo is 1 or above 1
 canvas.addEventListener('click', function(event) {
     if (cannonBall.ammo > 0 && !cannonBall.summoned) {
         shootCannonBall();
@@ -106,7 +107,7 @@ window.addEventListener('keydown', function(event) {
         updateGameUI(); // Update the game info when the ball type changes
     }
 });
-
+//function to start level and fetch leveldata
 function startLevel(levelNumber) {
     const levelKey = `level_${levelNumber}`;
     currentLevel = levelData[levelKey];
@@ -127,19 +128,19 @@ function startLevel(levelNumber) {
     resizeCanvas();
     updateGameUI(); // Update the UI with new ammo info
 }
-
+//moves cannonball
 function updateCannonPosition(cannonData) {
     cannon.x = cannonData.x;
     cannon.y = cannonData.y;
     cannon.pivotPoint.x = cannon.x + cannon.width / 2;
     cannon.pivotPoint.y = cannon.y + cannon.height * (1 - cannon.pivotOffset);
 }
-
+//resizes canvas
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-
+//all the draw functions draw the things
 function drawCannon(angle = 0) {
     ctx.save();
     ctx.translate(cannon.pivotPoint.x, cannon.pivotPoint.y);
@@ -258,7 +259,7 @@ function updateCannonBallPosition() {
         }
     }
 }
-
+//checks if cannonball inside wall, then calls the handle collisions function
 function handleWallCollisions() {
     if (cannonBall.summoned) {
         let collisionOccurred = false;
@@ -337,7 +338,7 @@ function handleCollisions() {
 
     // Check collision with Evil Rook
     if (currentLevel.evil_rook?.[0] && checkDetailedCollision(cannonBall, currentLevel.evil_rook[0])) {
-        handleEvilKingCollision();
+        handleEvilRookCollision();
     }
 }
 
@@ -430,9 +431,9 @@ function resolveCollision(ball, block) {
         }
     }
 }
-
-function handleEvilKingCollision() {
-    console.log('Cannonball hit the Evil King!');
+//detects if the cannonball is touching the EvilRook
+function handleEvilRookCollision() {
+    console.log('Cannonball hit the Evil Rook!');
     // Stop the game, or trigger a win condition here
     cannonBall.summoned = false;  // Despawn the cannonball
     // You can add additional logic such as moving to the next level or displaying a message
@@ -466,7 +467,7 @@ function drawBreakableBlocks() {
     }
 }
 
-function drawEvilKing() {
+function drawEvilRook() {
     if (currentLevel && currentLevel.evil_rook && currentLevel.evil_rook.length > 0) {
         const king = currentLevel.evil_rook[0];
         
@@ -480,12 +481,11 @@ function drawEvilKing() {
     }
 }
 
-
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawblocks();
     drawBreakableBlocks();
-    drawEvilKing();
+    drawEvilRook();
     drawCannon(cannon.angle);
     updateCannonBallPosition();
     handleCollisions();
